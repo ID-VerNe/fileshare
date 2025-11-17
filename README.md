@@ -113,15 +113,60 @@ server {
 
 ## 🧑‍💻 如何使用
 
-1.  **获取取件码 (`itemId`)**
-    *   登录你的 [OneDrive 网页版](https://onedrive.live.com/)。
-    *   找到你想要分享的**文件夹**或**文件**。
-    *   右键点击它 > **嵌入**。
-    *   在右侧弹出的侧边栏中，点击 **“生成”**。
-    *   在生成的 HTML 代码中，找到 `resid=` 部分。等号后面的字符串就是 `itemId`。
+### **获取取件码 (`itemId`)**
+
+`itemId` 是 OneDrive 中每个文件或文件夹的唯一标识符。你需要获取你想要分享的那个项目的 ID。这里提供两种方法：
+
+#### **方法一：通过 OneDrive 网页版“嵌入”功能**
+
+这种方法比较直观，但可能不适用于所有类型的账户。
+
+1.  登录你的 [OneDrive 网页版](https://onedrive.live.com/)。
+2.  找到你想要分享的**文件夹**或**文件**。
+3.  右键点击它 > **嵌入**。
+4.  在右侧弹出的侧边栏中，点击 **“生成”**。
+5.  在生成的 HTML 代码中，找到 `resid=` 部分。等号后面的字符串就是 `itemId`。
     *   例如，在 `...src="https://onedrive.live.com/embed?resid=ABCDEFG123456!789&..."` 中，`itemId` 就是 `ABCDEFG123456!789`。
 
-2.  打开你部署的网站，将复制的 `itemId` 粘贴到输入框中，点击“获取文件”即可。
+#### **方法二：使用 Microsoft Graph Explorer (推荐)**
+
+这种方法更为通用和强大，能准确地找到任何文件或文件夹的 ID。
+
+1.  访问 [Microsoft Graph Explorer](https://developer.microsoft.com/en-us/graph/graph-explorer)。
+2.  点击右上角的 **Sign in** 按钮，用你的 OneDrive 所在账户登录。
+3.  登录后，在查询输入框中，使用以下查询来列出你 OneDrive **根目录**下的所有项目：
+    ```
+    GET https://graph.microsoft.com/v1.0/me/drive/root/children
+    ```
+4.  点击 **Run query**。
+5.  在下方的 **Response preview** 区域，你会看到一个 JSON 格式的返回结果。这是一个包含文件和文件夹信息的列表。
+6.  在这个列表中，通过 `name` 字段找到你想要分享的项目，然后复制它对应的 `id` 字段的值。这个值就是你需要的 `itemId`。
+
+    ```json
+    {
+        "value": [
+            {
+                "id": "THIS_IS_THE_ITEM_ID_YOU_NEED_12345", // <-- 复制这个 ID
+                "name": "我的共享文件夹",
+                "folder": { "childCount": 5 },
+                "...": "..."
+            },
+            {
+                "id": "ANOTHER_ITEM_ID_67890",
+                "name": "我的文档.docx",
+                "file": { "mimeType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document" },
+                "...": "..."
+            }
+        ]
+    }
+    ```
+
+7.  **如果文件在子文件夹中**：你可以在列表中先找到那个子文件夹的 `id`，然后构造一个新的查询来查看该文件夹的内容，格式为： `https://graph.microsoft.com/v1.0/me/drive/items/{文件夹的ID}/children`，然后重复步骤 5 和 6。
+
+### **开始分享**
+
+打开你部署的网站，将复制的 `itemId` 粘贴到“取件码”输入框中，点击“获取文件”即可开始浏览、上传和下载。
+
 
 ## 🛠️ 修改与二次开发
 
