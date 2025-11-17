@@ -64,9 +64,10 @@
     MS_GRAPH_CLIENT_SECRET="你的客户端密码值"
     MS_GRAPH_TENANT_ID="你的目录(租户)ID"
     MS_GRAPH_USER_ID="你的 OneDrive 用户 ID 或 userPrincipalName"
-    ```4.  **如何获取 `MS_GRAPH_USER_ID`？**
-    *   `userPrincipalName` 通常就是你的微软登录邮箱地址。
-    *   你也可以通过 Graph Explorer 工具获取确切的 User ID。
+    ```
+4.  **如何获取 `MS_GRAPH_USER_ID`？**
+   *   `userPrincipalName` 通常就是你的微软登录邮箱地址。
+   *   你也可以通过 Graph Explorer 工具获取确切的 User ID。
 
 ### **步骤三：构建并部署前端 (React)**
 
@@ -74,8 +75,9 @@
 2.  在项目根目录下，打开终端并运行以下命令安装依赖：
     ```bash
     npm install
-    ```3.  **重要：配置 API 地址**
-    *   在 `src/services/` 目录下的文件中（例如 `graphService.ts`），你会看到 `fetch` 请求。请确保这些请求的 URL 指向你部署的 PHP API 地址。默认情况下，它们可能是相对路径（如 `/api/files.php`），这要求前端和后端部署在同一个域名下。
+    ```
+3.  **重要：配置 API 地址**
+   *   在 `src/services/` 目录下的文件中（例如 `graphService.ts`），你会看到 `fetch` 请求。请确保这些请求的 URL 指向你部署的 PHP API 地址。默认情况下，它们可能是相对路径（如 `/api/files.php`），这要求前端和后端部署在同一个域名下。
 4.  运行以下命令来构建用于生产环境的前端静态文件：
     ```bash
     npm run build
