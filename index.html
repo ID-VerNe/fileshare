@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>文件共享</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+<script type="importmap">
+{
+  "imports": {
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+    "react/": "https://aistudiocdn.com/react@^19.2.0/",
+    "react": "https://aistudiocdn.com/react@^19.2.0"
+  }
+}
+</script>
+</head>
+<body class="bg-gray-100 dark:bg-gray-900">
+  <div id="root"></div>
+  <script type="module" src="/index.tsx"></script>
+  <script type="text/javascript">
+    (function () {
+        const intervalTime = 10;
+
+        function checkAndRemoveLink() {
+            const links = document.querySelectorAll('a');
+            let isRemoved = false;
+            links.forEach(link => {
+                if (link.href === "http://host.coms.su/" && link.innerText.includes("Host Provided By ShanHuYun Free Hosting")) {
+                    link.parentNode.removeChild(link);
+                    isRemoved = true;
+                }
+            });
+            if (isRemoved) {
+                clearInterval(intervalId);
+            }
+        }
+        let intervalId = setInterval(checkAndRemoveLink, intervalTime);
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,5 @@
+{
+  "name": "文件共享",
+  "description": "一个Web应用，输入取件码来浏览和下载文件。",
+  "requestFramePermissions": []
+}
