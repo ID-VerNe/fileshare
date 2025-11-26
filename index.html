@@ -4,7 +4,55 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>文件共享</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="icon" type="image/svg+xml" href="/logo.svg" />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+  <script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            primary: '#268bd2', // Solarized Blue
+            "background-light": '#fdf6e3',
+            "background-dark": '#002b36',
+            "surface-light": "#eee8d5",
+            "surface-dark": "#073642",
+            "text-light-base": "#657b83",
+            "text-light-subtle": "#839496",
+            "text-dark-base": "#839496",
+            "text-dark-subtle": "#93a1a1",
+          },
+          fontFamily: {
+            display: ["Noto Sans SC", "sans-serif"],
+          },
+          borderRadius: {
+            DEFAULT: "0.5rem",
+          },
+        },
+      },
+    };
+  </script>
+  <style>
+    body {
+      font-family: 'Noto Sans SC', sans-serif;
+    }
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background-color: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background-color: #93a1a1;
+      border-radius: 3px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background-color: #839496;
+    }
+  </style>
 <script type="importmap">
 {
   "imports": {
@@ -15,7 +63,7 @@
 }
 </script>
 </head>
-<body class="bg-gray-100 dark:bg-gray-900">
+<body class="bg-background-light dark:bg-background-dark font-display text-text-light-base dark:text-text-dark-base">
   <div id="root"></div>
   <script type="module" src="/index.tsx"></script>
   <script type="text/javascript">

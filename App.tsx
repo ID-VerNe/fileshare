@@ -19,9 +19,10 @@ const App: React.FC = () => {
   const [files, setFiles] = useState<DriveItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
   const [hasFetched, setHasFetched] = useState(false);
   const [fetchingLinkFor, setFetchingLinkFor] = useState<string | null>(null);
+  const [selectedFile, setSelectedFile] = useState<DriveItem | null>(null);
+  const [showPreview, setShowPreview] = useState(false);
 
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -101,54 +102,79 @@ const App: React.FC = () => {
   }, [itemId, handleFetchFiles]); // 依赖项中加入 itemId 和 handleFetchFiles
 
   const renderSetupScreen = () => (
-    <div className="w-full max-w-2xl mx-auto">
-      <header className="text-center mb-8">
-        <h1 className="text-4xl sm:text-5xl font-bold text-gray-800 dark:text-gray-200">
-          文件共享
-        </h1>
-        <p className="mt-2 text-lg text-gray-600 dark:text-gray-400">
-          输入取件码以查看文件。
-        </p>
-      </header>
-
-      <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg">
-        <div className="space-y-4">
-          <div>
-            <label htmlFor="itemId" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              取件码
-            </label>
-            <input
-              id="itemId"
-              type="text"
-              value={itemId}
-              onChange={(e) => {
-                setItemId(e.target.value);
-                localStorage.setItem('file_share_code', e.target.value);
-              }}
-              placeholder="请输入取件码"
-              className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none bg-gray-50 dark:bg-gray-700"
-              disabled={isLoading}
-            />
-          </div>
+    <main className="flex-grow flex items-center justify-center p-4">
+      <div className="w-full max-w-md mx-auto">
+        <div className="text-center mb-8">
+          <h1 className="text-4xl font-bold text-slate-800 dark:text-slate-100">文件共享</h1>
+          <p className="mt-2 text-slate-600 dark:text-slate-400">输入取件码以查看文件。</p>
         </div>
-        <button
-          onClick={handleFetchFiles}
-          disabled={isLoading || !itemId}
-          className="mt-5 w-full flex justify-center items-center px-6 py-3 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-blue-400 disabled:cursor-not-allowed dark:disabled:bg-blue-800 transition-colors duration-200"
-        >
-          {isLoading ? <><Spinner /> <span>正在获取...</span></> : '获取文件'}
-        </button>
-        {error && (
-          <div className="mt-4 bg-red-100 dark:bg-red-900/50 border-l-4 border-red-500 text-red-700 dark:text-red-200 p-4 rounded-md" role="alert">
-            <p className="font-bold">错误</p><p>{error}</p>
+        <div className="bg-white dark:bg-slate-800 p-8 rounded-lg shadow-lg">
+          <div className="space-y-6">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300" htmlFor="itemId">取件码</label>
+              <div className="mt-1">
+                <input
+                  id="itemId"
+                  type="text"
+                  value={itemId}
+                  onChange={(e) => {
+                    setItemId(e.target.value);
+                    localStorage.setItem('file_share_code', e.target.value);
+                  }}
+                  placeholder="请输入取件码"
+                  className="block w-full px-4 py-3 border border-slate-300 dark:border-slate-600 rounded-md shadow-sm placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm bg-slate-50 dark:bg-slate-700 text-slate-900 dark:text-slate-200"
+                  disabled={isLoading}
+                />
+              </div>
+            </div>
+            <div>
+              <button
+                onClick={handleFetchFiles}
+                disabled={isLoading || !itemId}
+                className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors"
+              >
+                {isLoading ? <><Spinner /> <span>正在获取...</span></> : '获取文件'}
+              </button>
+            </div>
           </div>
-        )}
+          {error && (
+            <div className="mt-4 bg-red-100 dark:bg-red-900/50 border-l-4 border-red-500 text-red-700 dark:text-red-200 p-4 rounded-md" role="alert">
+              <p className="font-bold">错误</p><p>{error}</p>
+            </div>
+          )}
+        </div>
+        <div className="mt-8 text-center text-xs text-slate-500 dark:text-slate-400">
+          <p>这是一个文件共享服务。输入您的唯一代码即可访问文件。</p>
+          <p className="mt-1">© 2024 文件共享服务。保留所有权利。</p>
+        </div>
       </div>
-    </div>
+    </main>
   );
 
+  // 自动获取选中文件的下载链接
+  const handleFilePreviewSelect = useCallback(async (file: DriveItem) => {
+    setSelectedFile(file);
+    // 如果文件没有下载链接，自动获取
+    if (file.file && !file['@microsoft.graph.downloadUrl']) {
+      try {
+        setFetchingLinkFor(file.id);
+        const updatedFile = await fetchSingleFile(file.id);
+        // 合并更新，保留原有文件信息
+        const mergedFile = { ...file, ...updatedFile };
+        setFiles(currentFiles =>
+          currentFiles.map(f => (f.id === file.id ? mergedFile : f))
+        );
+        setSelectedFile(mergedFile);
+      } catch (err: any) {
+        setError(err.message || '获取文件链接失败。');
+      } finally {
+        setFetchingLinkFor(null);
+      }
+    }
+  }, [fetchSingleFile]);
+
   const renderFileBrowser = () => (
-    <div className="h-screen w-screen flex flex-col">
+    <div className="h-screen w-full flex flex-col">
       {/* 隐藏的文件输入框 */}
       <input
         type="file"
@@ -158,102 +184,180 @@ const App: React.FC = () => {
         disabled={isUploading}
       />
 
-       <header className="sticky top-0 z-20 bg-white dark:bg-gray-800/80 backdrop-blur-md shadow-sm p-3 flex items-center justify-between gap-4 border-b border-gray-200 dark:border-gray-700">
-        <button onClick={() => setHasFetched(false)} className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-sm font-semibold rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">
-          返回
-        </button>
-        {/* 新增上传按钮 */}
-        <button
-          onClick={() => fileInputRef.current?.click()}
-          disabled={isUploading}
-          className="px-4 py-2 bg-green-500 text-white text-sm font-semibold rounded-md hover:bg-green-600 disabled:bg-green-300 disabled:cursor-wait transition-colors"
-        >
-          上传文件
-        </button>
-         <div className="flex items-center gap-2 p-1 bg-gray-200 dark:bg-gray-700 rounded-lg">
-           <button onClick={() => setViewMode('list')} className={`p-1.5 rounded-md ${viewMode === 'list' ? 'bg-white dark:bg-gray-900 text-blue-600' : 'text-gray-500 hover:text-gray-800 dark:hover:text-gray-200'}`} aria-label="List view">
-             <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M3 5a1 1 0 000 2h14a1 1 0 100-2H3zm0 4a1 1 0 000 2h14a1 1 0 100-2H3zm0 4a1 1 0 000 2h14a1 1 0 100-2H3z"/></svg>
-           </button>
-           <button onClick={() => setViewMode('grid')} className={`p-1.5 rounded-md ${viewMode === 'grid' ? 'bg-white dark:bg-gray-900 text-blue-600' : 'text-gray-500 hover:text-gray-800 dark:hover:text-gray-200'}`} aria-label="Grid view">
-             <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zm0 8a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zm8-8a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2h-2zm0 8a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2h-2z"/></svg>
-           </button>
-         </div>
+      <header className="flex h-16 flex-shrink-0 items-center justify-between border-b border-surface-light dark:border-surface-dark bg-background-light dark:bg-background-dark px-4 md:px-6">
+        <div className="flex items-center space-x-4">
+          <button 
+            onClick={() => setHasFetched(false)} 
+            className="flex items-center justify-center rounded-full p-2 hover:bg-surface-light dark:hover:bg-surface-dark"
+          >
+            <span className="material-icons-outlined text-text-light-subtle dark:text-text-dark-subtle">arrow_back_ios_new</span>
+          </button>
+          <h1 className="text-lg font-semibold text-text-light-base dark:text-text-dark-base">文件</h1>
+        </div>
+        <div className="flex items-center space-x-2">
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            disabled={isUploading}
+            className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary/90"
+          >
+            <span className="material-icons-outlined text-base">upload_file</span>
+            <span>上传文件</span>
+          </button>
+        </div>
       </header>
-      <main className="flex-grow overflow-y-auto p-4 sm:p-6">
-        {/* 新增上传进度条 */}
-        {isUploading && (
-          <div className="mb-4 p-4 bg-white dark:bg-gray-800 rounded-lg shadow-md">
-            <p className="text-sm font-medium mb-1 truncate">正在上传: {uploadingFileName}</p>
-            <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5">
-              <div className="bg-blue-600 h-2.5 rounded-full" style={{ width: `${uploadProgress}%` }}></div>
+      
+      {/* 三栏布局 */}
+      <div className="flex flex-1 overflow-hidden">
+        {/* 左侧：文件列表 */}
+        <aside className="w-full flex-shrink-0 border-r border-surface-light dark:border-surface-dark md:w-1/3 lg:w-1/4">
+          <div className="flex h-full flex-col">
+            {/* 新增上传进度条 */}
+            {isUploading && (
+              <div className="flex-shrink-0 border-b border-surface-light dark:border-surface-dark p-4">
+                <div className="space-y-4">
+                  <h3 className="text-sm font-medium text-text-light-base dark:text-text-dark-base">上传中</h3>
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between text-sm">
+                      <p className="truncate text-text-light-subtle dark:text-text-dark-subtle">{uploadingFileName}</p>
+                      <span className="text-text-light-base dark:text-text-dark-base">{uploadProgress}%</span>
+                    </div>
+                    <div className="h-1.5 w-full overflow-hidden rounded-full bg-surface-light dark:bg-surface-dark">
+                      <div className="h-full bg-primary" style={{ width: `${uploadProgress}%` }}></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            <div className="flex-1 overflow-y-auto p-2">
+              {files.length === 0 && !isLoading && (
+                <div className="text-center text-text-light-subtle dark:text-text-dark-subtle pt-16"><p>此文件夹为空。</p></div>
+              )}
+              
+              <ul className="space-y-1">
+                {files.map((item) => (
+                  <li 
+                    key={item.id} 
+                    className={`${selectedFile?.id === item.id ? 'bg-primary/10 rounded-lg' : ''}`}
+                  >
+                    <div 
+                      className={`flex items-center justify-between rounded-lg px-3 py-2.5 text-sm ${selectedFile?.id === item.id ? 'text-primary font-medium' : 'text-text-light-base dark:text-text-dark-base hover:bg-surface-light dark:hover:bg-surface-dark'}`}
+                      onClick={() => handleFilePreviewSelect(item)}
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        {item.folder ? (
+                          <span className="material-icons-outlined text-text-light-subtle dark:text-text-dark-subtle flex-shrink-0">folder</span>
+                        ) : item.file?.mimeType?.startsWith('image/') ? (
+                          <span className="material-icons-outlined text-text-light-subtle dark:text-text-dark-subtle flex-shrink-0">image</span>
+                        ) : item.file?.mimeType?.startsWith('video/') ? (
+                          <span className="material-icons-outlined text-text-light-subtle dark:text-text-dark-subtle flex-shrink-0">videocam</span>
+                        ) : item.file?.mimeType?.includes('pdf') ? (
+                          <span className="material-icons-outlined text-text-light-subtle dark:text-text-dark-subtle flex-shrink-0">picture_as_pdf</span>
+                        ) : (
+                          <span className="material-icons-outlined text-text-light-subtle dark:text-text-dark-subtle flex-shrink-0">description</span>
+                        )}
+                        <span className="truncate max-w-[180px] md:max-w-[240px] lg:max-w-[320px]" title={item.name}>{item.name}</span>
+                      </div>
+                      <span className="text-xs text-text-light-subtle dark:text-text-dark-subtle whitespace-nowrap">{item.folder ? '—' : formatBytes(item.size)}</span>
+                    </div>
+                  </li>
+                ))}
+              </ul>
             </div>
-            <p className="text-right text-xs mt-1 font-mono">{uploadProgress}%</p>
           </div>
-        )}
-        {files.length === 0 && !isLoading && (
-          <div className="text-center text-gray-500 dark:text-gray-400 pt-16"><p>此文件夹为空。</p></div>
-        )}
-        {viewMode === 'list' ? (
-          <ul className="divide-y divide-gray-200 dark:divide-gray-700 bg-white dark:bg-gray-800 shadow-md rounded-lg">
-            {files.map((item) => (
-              <li key={item.id} className="p-3 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors duration-150 gap-3">
-                <div className="flex items-center gap-3 w-2/3 truncate">
-                  <FileTypeIcon item={item} view="list" />
-                  <span className="font-medium truncate" title={item.name}>{item.name}</span>
-                </div>
-                <div className="flex items-center gap-4 w-1/3 justify-end">
-                  <span className="text-sm text-gray-500 dark:text-gray-400 min-w-[80px] text-right">{item.folder ? '—' : formatBytes(item.size)}</span>
-                  {item.folder ? (
-                    <span className="px-3 py-1.5 text-xs text-gray-400">文件夹</span>
-                  ) : item['@microsoft.graph.downloadUrl'] ? (
-                    <a href={item['@microsoft.graph.downloadUrl']} download className="px-3 py-1.5 bg-blue-500 text-white text-xs font-semibold rounded-md hover:bg-blue-600">下载</a>
-                  ) : (
-                    <button 
-                      onClick={() => handleGetDownloadLink(item.id)}
-                      disabled={fetchingLinkFor === item.id}
-                      className="px-3 py-1.5 bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-200 text-xs font-semibold rounded-md hover:bg-gray-300 dark:hover:bg-gray-500 disabled:opacity-50 disabled:cursor-wait"
-                    >
-                      {fetchingLinkFor === item.id ? '获取中...' : '获取链接'}
-                    </button>
-                  )}
-                </div>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8 gap-4">
-            {files.map((item) => (
-              <div key={item.id} className="relative group bg-white dark:bg-gray-800 rounded-md shadow-md hover:shadow-lg transition-shadow duration-200 flex flex-col">
-                <FileTypeIcon item={item} view="grid" />
-                <div className="p-2 text-center flex-grow flex flex-col justify-center">
-                  <p className="text-sm truncate font-medium" title={item.name}>{item.name}</p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">{item.folder ? '—' : formatBytes(item.size)}</p>
-                </div>
-                {item.folder ? null : item['@microsoft.graph.downloadUrl'] ? (
-                  <a href={item['@microsoft.graph.downloadUrl']} download className="absolute top-2 right-2 p-1.5 bg-blue-600 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-blue-700" aria-label="Download">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-                  </a>
+        </aside>
+        
+        {/* 右侧：文件详情和预览 */}
+        {selectedFile ? (
+          <main className="hidden flex-1 flex-col bg-surface-light dark:bg-surface-dark md:flex">
+            {/* 预览区域 */}
+            <div className="flex-shrink-0 max-h-[60vh] overflow-hidden">
+              <div className="relative flex h-full items-center justify-center p-4 lg:p-8">
+                {selectedFile.file?.mimeType?.startsWith('image/') ? (
+                  <img 
+                    src={selectedFile['@microsoft.graph.downloadUrl']} 
+                    alt={selectedFile.name} 
+                    className="max-h-full max-w-full object-contain" 
+                  />
+                ) : selectedFile.file?.mimeType?.startsWith('video/') ? (
+                  <video 
+                    src={selectedFile['@microsoft.graph.downloadUrl']} 
+                    controls 
+                    className="max-w-full max-h-full"
+                    autoPlay={false}
+                    preload="metadata"
+                    playsInline
+                  />
                 ) : (
-                  <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-md">
-                     <button 
-                      onClick={() => handleGetDownloadLink(item.id)}
-                      disabled={fetchingLinkFor === item.id}
-                      className="px-3 py-1.5 bg-white text-gray-800 text-xs font-bold rounded-md hover:bg-gray-200 disabled:opacity-75 disabled:cursor-wait"
-                    >
-                      {fetchingLinkFor === item.id ? '获取中...' : '获取链接'}
-                    </button>
+                  <div className="flex flex-col items-center justify-center text-center">
+                    {selectedFile.folder ? (
+                      <span className="material-icons-outlined mb-4 text-6xl text-text-light-subtle dark:text-text-dark-subtle opacity-50">folder</span>
+                    ) : selectedFile.file?.mimeType?.includes('pdf') ? (
+                      <span className="material-icons-outlined mb-4 text-6xl text-text-light-subtle dark:text-text-dark-subtle opacity-50">picture_as_pdf</span>
+                    ) : (
+                      <span className="material-icons-outlined mb-4 text-6xl text-text-light-subtle dark:text-text-dark-subtle opacity-50">description</span>
+                    )}
+                    <h3 className="text-lg font-medium text-text-light-base dark:text-text-dark-base">{selectedFile.folder ? '文件夹' : '不支持此文件类型的预览'}</h3>
+                    <p className="mt-1 text-sm text-text-light-subtle dark:text-text-dark-subtle">{selectedFile.folder ? '选择文件夹以查看其内容' : '从列表中选择一个文件以查看其详细信息和预览'}</p>
                   </div>
                 )}
               </div>
-            ))}
-          </div>
+            </div>
+            
+            {/* 文件详情 */}
+            <div className="flex-1 overflow-y-auto border-t border-background-light dark:border-background-dark p-6">
+              <div className="flex items-start justify-between">
+                <h2 className="mb-4 text-lg font-semibold text-text-light-base dark:text-text-dark-base break-all">{selectedFile.name}</h2>
+              </div>
+              <div className="space-y-3 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-text-light-subtle dark:text-text-dark-subtle">类型</span>
+                  <span className="text-text-light-base dark:text-text-dark-base">{selectedFile.file?.mimeType || '文件夹'}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-text-light-subtle dark:text-text-dark-subtle">大小</span>
+                  <span className="text-text-light-base dark:text-text-dark-base">{selectedFile.folder ? '—' : formatBytes(selectedFile.size)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-text-light-subtle dark:text-text-dark-subtle">ID</span>
+                  <span className="truncate text-text-light-base dark:text-text-dark-base">{selectedFile.id}</span>
+                </div>
+                {selectedFile.file?.mimeType && (
+                  <div className="flex justify-between">
+                    <span className="text-text-light-subtle dark:text-text-dark-subtle">MIME 类型</span>
+                    <span className="text-text-light-base dark:text-text-dark-base">{selectedFile.file.mimeType}</span>
+                  </div>
+                )}
+                {selectedFile['@microsoft.graph.downloadUrl'] && (
+                  <div className="mt-6">
+                    <a 
+                      href={selectedFile['@microsoft.graph.downloadUrl']} 
+                      download 
+                      className="w-full inline-flex justify-center items-center gap-2 px-4 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary/90 transition-colors"
+                    >
+                      <span className="material-icons-outlined text-base">download</span>
+                      下载文件
+                    </a>
+                  </div>
+                )}
+              </div>
+            </div>
+          </main>
+        ) : (
+          <main className="hidden flex-1 flex-col bg-surface-light dark:bg-surface-dark md:flex">
+            <div className="flex h-full flex-col items-center justify-center p-6 text-center">
+              <span className="material-icons-outlined mb-4 text-6xl text-text-light-subtle dark:text-text-dark-subtle opacity-50">select_all</span>
+              <h3 className="text-lg font-medium text-text-light-base dark:text-text-dark-base">选择文件</h3>
+              <p className="mt-1 text-sm text-text-light-subtle dark:text-text-dark-subtle">从列表中选择一个文件以查看其详细信息和预览。</p>
+            </div>
+          </main>
         )}
-      </main>
+      </div>
     </div>
   );
 
   return (
-    <div className={`min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 ${!hasFetched && 'flex flex-col items-center justify-center p-4'}`}>
+    <div className={`min-h-screen ${!hasFetched && 'flex flex-col'}`}>
       {hasFetched ? renderFileBrowser() : renderSetupScreen()}
     </div>
   );
