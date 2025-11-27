@@ -7,7 +7,7 @@ header("Access-Control-Allow-Origin: *");
 header("Content-Type: application/json; charset=UTF-8");
 
 // --- Main Logic: Fetch data from Graph API ---
-$selectFields = 'id,name,size,file,folder,@microsoft.graph.downloadUrl,thumbnails';
+$selectFields = 'id,name,size,file,folder,@microsoft.graph.downloadUrl';
 $baseGraphUrl = "https://graph.microsoft.com/v1.0/users/" . urlencode($userId) . "/drive/items/";
 
 // --- Handle fetching a single file's download URL via content redirect ---
@@ -73,7 +73,8 @@ if (isset($_GET['fileId']) && !empty(trim($_GET['fileId']))) {
 if (isset($_GET['itemId']) && !empty(trim($_GET['itemId']))) {
     $itemId = trim($_GET['itemId']);
     $allFiles = [];
-    $initialUrl = $baseGraphUrl . urlencode($itemId) . "/children?\$select=" . urlencode($selectFields);
+    // Add $expand=thumbnails to get thumbnail data
+    $initialUrl = $baseGraphUrl . urlencode($itemId) . "/children?\$expand=thumbnails&\$select=" . urlencode($selectFields);
     $nextLink = $initialUrl;
 
     do {

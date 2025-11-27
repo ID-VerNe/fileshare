@@ -1,5 +1,24 @@
 // 文件共享/services/uploadService.ts
 
+// Helper to clean up response from free hosting providers that inject HTML
+async function parseJsonWithCleanup(response: Response) {
+  const text = await response.text();
+  try {
+    return JSON.parse(text);
+  } catch (e) {
+    const lastBrace = text.lastIndexOf('}');
+    if (lastBrace !== -1) {
+      const cleanText = text.substring(0, lastBrace + 1);
+      try {
+        return JSON.parse(cleanText);
+      } catch (e2) {
+        console.warn('Failed to parse cleaned JSON:', e2);
+      }
+    }
+    throw new Error(`Invalid JSON response: ${text.substring(0, 100)}...`);
+  }
+}
+
 /**
  * Step 1: Request an upload URL from our backend.
  * This function calls our own API (/api/upload.php) to get a temporary,
@@ -18,11 +37,11 @@ export async function createUploadSession(itemId: string, fileName: string): Pro
   });
 
   if (!response.ok) {
-    const errorData = await response.json();
+    const errorData = await parseJsonWithCleanup(response);
     throw new Error(errorData.message || 'Failed to create upload session.');
   }
 
-  const data = await response.json();
+  const data = await parseJsonWithCleanup(response);
   return data.uploadUrl;
 }
 

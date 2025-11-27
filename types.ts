@@ -19,7 +19,14 @@ export interface DriveItem {
   file?: {
     mimeType: string;
   };
-  folder?: {};
+  folder?: {
+    childCount?: number;
+  };
   '@microsoft.graph.downloadUrl'?: string;
   thumbnails?: ThumbnailSet[];
+}
+
+export interface BreadcrumbItem {
+  id: string;
+  name: string;
 }
