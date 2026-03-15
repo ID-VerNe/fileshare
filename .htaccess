@@ -1,3 +1,13 @@
+# 允许跨域请求 (可选)
+<IfModule mod_headers.c>
+    Header set Access-Control-Allow-Origin "*"
+</IfModule>
+
+# 注册 .mjs 为 JavaScript 类型 (解决 pdf.js worker 加载问题)
+<IfModule mod_mime.c>
+    AddType application/javascript .mjs
+</IfModule>
+
 # 严禁直接访问敏感文件和数据库
 <FilesMatch "\.(env|db|sql|log|json|yaml|lock)$">
     Order allow,deny
