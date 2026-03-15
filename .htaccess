@@ -1,0 +1,16 @@
+# 严禁直接访问敏感文件和数据库
+<FilesMatch "\.(env|db|sql|log|json|yaml|lock)$">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# 屏蔽 .git 等隐藏目录
+RedirectMatch 404 /\..*$
+
+# 禁止目录列表索引
+Options -Indexes
+
+# 强制使用 HTTPS (配合 Cloudflare X-Forwarded-Proto)
+RewriteEngine On
+RewriteCond %{HTTP:X-Forwarded-Proto} !https
+RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]

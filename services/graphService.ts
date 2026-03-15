@@ -20,7 +20,7 @@ async function parseJsonWithCleanup(response: Response) {
   }
 }
 
-export async function fetchFilesFromBackend(itemId: string): Promise<DriveItem[]> {
+export async function fetchFilesFromBackend(itemId: string): Promise<{ files: DriveItem[], uploadAllowed: boolean }> {
   if (!itemId || !itemId.trim()) {
     throw new Error('请输入有效的取件码。');
   }
@@ -36,7 +36,10 @@ export async function fetchFilesFromBackend(itemId: string): Promise<DriveItem[]
     }
 
     const data = await parseJsonWithCleanup(response);
-    return data.files || [];
+    return {
+      files: data.files || [],
+      uploadAllowed: data.uploadAllowed || false
+    };
   } catch (error) {
     console.error('Fetch from backend failed:', error);
     if (error instanceof Error) {
