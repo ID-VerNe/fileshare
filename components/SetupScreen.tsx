@@ -85,19 +85,17 @@ const SetupScreen: React.FC<SetupScreenProps> = ({
 
         {/* Footer */}
         <div className="mt-8 text-center flex flex-col items-center gap-4">
-          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">Powered by Gemini CLI</p>
           <div className="flex items-center justify-center gap-4 text-xs text-slate-500">
-            <span>© 2024 文件共享服务</span>
+            <span>© 2026 文件共享服务</span>
             <div className="w-1 h-1 rounded-full bg-slate-300"></div>
-            <button 
+            <button
               onClick={onAdminAuth}
               className="font-medium hover:text-[#2a4a82] transition-colors"
             >
               管理后台
             </button>
           </div>
-        </div>
-      </div>
+        </div>      </div>
     </main>
   );
 };

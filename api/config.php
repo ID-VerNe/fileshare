@@ -4,6 +4,11 @@
  * Production Configuration
  */
 
+/**
+ * FileShare - Secure Cloud Bridge
+ * Production Configuration
+ */
+
 // --- Production Security: Silence all PHP errors ---
 error_reporting(0);
 ini_set('display_errors', 0);
@@ -68,6 +73,49 @@ foreach ($possibleEnvPaths as $path) {
 function env(string $key, ?string $default = null): string {
     $v = $_ENV[$key] ?? getenv($key);
     return $v !== false && $v !== null ? (string)$v : (string)($default ?? '');
+}
+
+/**
+ * Gets a new access token from Microsoft.
+ */
+function get_access_token($tenantId, $clientId, $clientSecret) {
+    if (!function_exists('curl_init')) {
+        throw new Exception("PHP cURL extension is not enabled.");
+    }
+
+    $tokenEndpoint = "https://login.microsoftonline.com/$tenantId/oauth2/v2.0/token";
+    $postData = [
+        'client_id' => $clientId,
+        'scope' => 'https://graph.microsoft.com/.default',
+        'client_secret' => $clientSecret,
+        'grant_type' => 'client_credentials'
+    ];
+
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, $tokenEndpoint);
+    curl_setopt($ch, CURLOPT_POST, 1);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($postData));
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_TIMEOUT, 30);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/x-www-form-urlencoded']);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);
+
+    $response = curl_exec($ch);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+
+    if ($httpCode != 200 || $response === false) {
+        $data = json_decode($response, true);
+        $errorMsg = $data['error_description'] ?? $data['error'] ?? "HTTP $httpCode";
+        throw new Exception("Auth failed: " . $errorMsg);
+    }
+    
+    $tokenData = json_decode($response, true);
+    $_SESSION['ms_graph_token'] = $tokenData['access_token'];
+    $_SESSION['ms_graph_token_expires'] = time() + $tokenData['expires_in'] - 300; 
+    
+    return $tokenData['access_token'];
 }
 
 // --- Load Configuration from .env ---
