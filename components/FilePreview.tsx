@@ -111,40 +111,10 @@ const FilePreview: React.FC<FilePreviewProps> = ({
       );
     }
 
-    if (file.file?.mimeType === 'application/pdf') {
-      return (
-        <div className="w-full h-full max-w-5xl bg-white dark:bg-slate-900 rounded-2xl shadow-lg overflow-hidden ring-1 ring-black/5 mx-auto">
-          <iframe
-            src={`${downloadUrl}#toolbar=0`}
-            className="w-full h-full border-none"
-            title={file.name}
-          />
-        </div>
-      );
-    }
-
-    if (isTextFile) {
-      return (
-        <div className="w-full h-full max-w-5xl bg-white dark:bg-slate-900 rounded-2xl shadow-lg overflow-hidden flex flex-col border border-slate-100 dark:border-slate-800 mx-auto">
-          <div className="bg-slate-50 dark:bg-slate-800 px-4 py-2.5 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center flex-shrink-0">
-            <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Source Preview</span>
-            <span className="text-[10px] font-bold text-[#2a4a82] bg-[#eff4fa] px-2 py-0.5 rounded-md">UTF-8</span>
-          </div>
-          <div className="flex-1 overflow-auto p-4 md:p-8 custom-scrollbar">
-            {isTextLoading ? (
-              <div className="h-full flex items-center justify-center opacity-50"><Spinner /></div>
-            ) : (
-              <pre className="text-xs md:text-sm font-mono whitespace-pre-wrap break-all text-slate-800 dark:text-slate-200 selection:bg-[#2a4a82]/20">
-                {textContent}
-              </pre>
-            )}
-          </div>
-        </div>
-      );
-    }
-
-    const officeExtensions = ['.docx', '.xlsx', '.pptx', '.doc', '.xls', '.ppt'];
-    if (officeExtensions.some(ext => file.name.toLowerCase().endsWith(ext))) {
+    const officeExtensions = ['.docx', '.xlsx', '.pptx', '.doc', '.xls', '.ppt', '.pdf'];
+    const isPDF = file.file?.mimeType === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
+    
+    if (isPDF || officeExtensions.some(ext => file.name.toLowerCase().endsWith(ext))) {
       return (
         <div className="w-full h-full max-w-5xl flex flex-col bg-white rounded-2xl shadow-lg overflow-hidden ring-1 ring-black/5 mx-auto">
           <iframe
@@ -153,7 +123,7 @@ const FilePreview: React.FC<FilePreviewProps> = ({
             title={file.name}
           />
           <div className="bg-slate-50 dark:bg-slate-800 px-4 py-2 border-t border-slate-100 dark:border-slate-700 flex justify-center items-center gap-2">
-            <span className="text-[10px] font-bold opacity-40 uppercase tracking-widest">Office Online</span>
+            <span className="text-[10px] font-bold opacity-40 uppercase tracking-widest">{isPDF ? 'PDF Viewer' : 'Office Online'}</span>
           </div>
         </div>
       );
