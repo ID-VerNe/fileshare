@@ -111,10 +111,25 @@ const FilePreview: React.FC<FilePreviewProps> = ({
       );
     }
 
-    const officeExtensions = ['.docx', '.xlsx', '.pptx', '.doc', '.xls', '.ppt', '.pdf'];
+    const officeExtensions = ['.docx', '.xlsx', '.pptx', '.doc', '.xls', '.ppt'];
     const isPDF = file.file?.mimeType === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
     
-    if (isPDF || officeExtensions.some(ext => file.name.toLowerCase().endsWith(ext))) {
+    if (isPDF) {
+      return (
+        <div className="w-full h-full max-w-5xl flex flex-col bg-white rounded-2xl shadow-lg overflow-hidden ring-1 ring-black/5 mx-auto">
+          <iframe
+            src={`/api/proxy.php?fileId=${encodeURIComponent(file.id)}`}
+            className="w-full h-full border-none bg-white"
+            title={file.name}
+          />
+          <div className="bg-slate-50 dark:bg-slate-800 px-4 py-2 border-t border-slate-100 dark:border-slate-700 flex justify-center items-center gap-2">
+            <span className="text-[10px] font-bold opacity-40 uppercase tracking-widest text-emerald-600 dark:text-emerald-400">PDF Browser Preview (Domestic Optimized)</span>
+          </div>
+        </div>
+      );
+    }
+
+    if (officeExtensions.some(ext => file.name.toLowerCase().endsWith(ext))) {
       return (
         <div className="w-full h-full max-w-5xl flex flex-col bg-white rounded-2xl shadow-lg overflow-hidden ring-1 ring-black/5 mx-auto">
           <iframe
@@ -123,7 +138,7 @@ const FilePreview: React.FC<FilePreviewProps> = ({
             title={file.name}
           />
           <div className="bg-slate-50 dark:bg-slate-800 px-4 py-2 border-t border-slate-100 dark:border-slate-700 flex justify-center items-center gap-2">
-            <span className="text-[10px] font-bold opacity-40 uppercase tracking-widest">{isPDF ? 'PDF Viewer' : 'Office Online'}</span>
+            <span className="text-[10px] font-bold opacity-40 uppercase tracking-widest">Office Online</span>
           </div>
         </div>
       );
