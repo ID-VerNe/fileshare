@@ -3,7 +3,7 @@ import * as pdfjs from 'pdfjs-dist';
 import Spinner from './Spinner';
 
 // 使用可靠的 cdnjs 托管 Worker，确保国内访问稳定且解决 404 问题
-const PDFJS_VERSION = '4.10.38'; // 使用匹配的稳定版本
+const PDFJS_VERSION = '5.5.207'; // 必须与 package.json 中的版本号严格一致
 pdfjs.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${PDFJS_VERSION}/pdf.worker.min.mjs`;
 
 interface PdfViewerProps {
