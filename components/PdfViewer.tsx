@@ -2,9 +2,9 @@ import React, { useEffect, useRef, useState } from 'react';
 import * as pdfjs from 'pdfjs-dist';
 import Spinner from './Spinner';
 
-// 设置 PDF.js 的 Worker 路径，直接指向 node_modules 中的构建版本
-// Vite 会自动处理这个路径
-pdfjs.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.mjs`;
+// 使用可靠的 cdnjs 托管 Worker，确保国内访问稳定且解决 404 问题
+const PDFJS_VERSION = '4.10.38'; // 使用匹配的稳定版本
+pdfjs.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${PDFJS_VERSION}/pdf.worker.min.mjs`;
 
 interface PdfViewerProps {
   url: string;
