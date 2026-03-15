@@ -13,6 +13,7 @@
     "@tailwindcss/typography": "^0.5.19",
     "autoprefixer": "^10.4.27",
     "material-icons": "^1.13.14",
+    "pdfjs-dist": "^5.5.207",
     "postcss": "^8.5.8",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",

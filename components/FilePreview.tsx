@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import type { DriveItem } from '../types';
 import Spinner from './Spinner';
+import PdfViewer from './PdfViewer';
 
 interface FilePreviewProps {
   file: DriveItem;
@@ -117,13 +118,9 @@ const FilePreview: React.FC<FilePreviewProps> = ({
     if (isPDF) {
       return (
         <div className="w-full h-full max-w-5xl flex flex-col bg-white rounded-2xl shadow-lg overflow-hidden ring-1 ring-black/5 mx-auto">
-          <iframe
-            src={`/api/proxy.php?fileId=${encodeURIComponent(file.id)}`}
-            className="w-full h-full border-none bg-white"
-            title={file.name}
-          />
+          <PdfViewer url={`/api/proxy.php?fileId=${encodeURIComponent(file.id)}`} />
           <div className="bg-slate-50 dark:bg-slate-800 px-4 py-2 border-t border-slate-100 dark:border-slate-700 flex justify-center items-center gap-2">
-            <span className="text-[10px] font-bold opacity-40 uppercase tracking-widest text-emerald-600 dark:text-emerald-400">PDF Browser Preview (Domestic Optimized)</span>
+            <span className="text-[10px] font-bold opacity-40 uppercase tracking-widest text-[#2a4a82] dark:text-blue-400">Local PDF.js Renderer (No Download Interruption)</span>
           </div>
         </div>
       );
